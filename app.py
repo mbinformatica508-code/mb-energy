@@ -2,41 +2,13 @@ import os
 from flask import Flask, render_template_string, jsonify, request, redirect, url_for
 import random
 from datetime import datetime
-from twilio.rest import Client
 
 app = Flask(__name__)
 
-# --- CONFIGURAÇÕES DO TWILIO ---
-# 1. Crie uma conta em twilio.com
-# 2. Pegue seu ACCOUNT_SID e AUTH_TOKEN no painel do Twilio
-# 3. No Render, vá em "Environment Variables" e adicione essas chaves
-TWILIO_SID = os.environ.get('TWILIO_SID', 'SEU_SID_AQUI')
-TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN', 'SEU_TOKEN_AQUI')
-NUMERO_BOT = 'whatsapp:+14155238886' # Número padrão do Sandbox do Twilio
-SEU_NUMERO = 'whatsapp:+55719XXXXXXXX' # Coloque seu número com DDD de Salvador
-
-# Banco de dados temporário
 dados_app = {
     "limite_gasto": 300.00,
-    "picos": [],
-    "alerta_enviado": False # Para evitar enviar várias mensagens seguidas
+    "picos": []
 }
-
-def enviar_whatsapp(valor, limite):
-    if TWILIO_SID == 'SEU_SID_AQUI':
-        print("⚠️ Twilio não configurado. Alerta não enviado.")
-        return False
-    try:
-        client = Client(TWILIO_SID, TWILIO_TOKEN)
-        mensagem = client.messages.create(
-            from_=NUMERO_BOT,
-            body=f"⚡ *MB ENERGY ALERT*\n\nMateus, o consumo estimado atingiu *R$ {valor}*!\nSua meta é *R$ {limite}*.\n\nVerifique seus aparelhos para economizar! 💡",
-            to=SEU_NUMERO
-        )
-        return True
-    except Exception as e:
-        print(f"Erro no WhatsApp: {e}")
-        return False
 
 HTML_GERAL = """
 <!DOCTYPE html>
@@ -64,7 +36,7 @@ HTML_GERAL = """
     <div class="container">
         <div class="card">
             <h1>⚡ MB ENERGY INTEL</h1>
-            <div id="alerta_ui" class="alerta-box">⚠️ ALERTA ENVIADO AO WHATSAPP</div>
+            <div id="alerta_ui" class="alerta-box">⚠️ ATENÇÃO: META DE GASTO ATINGIDA!</div>
             <p class="label">Potência Atual</p>
             <div class="watts" id="potencia">0 W</div>
         </div>
@@ -75,7 +47,7 @@ HTML_GERAL = """
                 <div class="valor-principal" id="fatura">R$ 0,00</div>
             </div>
             <div class="card">
-                <p class="label">Meta Mensal</p>
+                <p class="label">Sua Meta</p>
                 <div class="valor-principal" style="color: #c9d1d9;">R$ {{ "%.2f"|format(limite_atual) }}</div>
             </div>
         </div>
@@ -89,7 +61,7 @@ HTML_GERAL = """
             <div id="lista_picos"></div>
         </div>
 
-        <a href="/configurar" class="btn">⚙️ CONFIGURAR META & WHATSAPP</a>
+        <a href="/configurar" class="btn">⚙️ CONFIGURAR MINHA META</a>
         <p style="text-align: center; font-size: 10px; color: #484f58; margin-top: 20px;">MB Circuito Digital - Salvador/BA</p>
     </div>
 
@@ -136,42 +108,33 @@ def index():
 def configurar():
     if request.method == 'POST':
         dados_app["limite_gasto"] = float(request.form.get('limite'))
-        dados_app["alerta_enviado"] = False # Reseta o alerta para a nova meta
         return redirect(url_for('index'))
     return render_template_string("""
         <body style="background:#0d1117;color:white;font-family:sans-serif;text-align:center;padding:50px;">
-            <h2>Configurar Meta</h2>
+            <h2>Definir Meta de Gasto</h2>
             <form method="POST">
-                <input type="number" step="0.01" name="limite" style="padding:15px;border-radius:8px;margin-bottom:10px;width:80%;max-width:300px;"><br>
-                <button type="submit" style="background:#238636;color:white;padding:15px 30px;border:none;border-radius:8px;font-weight:bold;">SALVAR E ATIVAR BOT</button>
+                <input type="number" step="0.01" name="limite" placeholder="Ex: 200.00" style="padding:15px;border-radius:8px;margin-bottom:10px;width:80%;max-width:300px;"><br>
+                <button type="submit" style="background:#238636;color:white;padding:15px 30px;border:none;border-radius:8px;font-weight:bold;">SALVAR CONFIGURAÇÃO</button>
             </form>
-            <br><a href="/" style="color:#58a6ff;text-decoration:none;">← Voltar</a>
+            <br><a href="/" style="color:#58a6ff;text-decoration:none;">← Voltar ao Dashboard</a>
         </body>
     """)
 
 @app.route('/api/dados')
 def dados():
     potencia = random.randint(150, 2800)
-    
     if potencia > 2200:
         dados_app["picos"].insert(0, {"hora": datetime.now().strftime("%H:%M:%S"), "valor": potencia})
         dados_app["picos"] = dados_app["picos"][:5]
 
     valor_fatura = (potencia * 0.82)
-    fatura_str = f"{valor_fatura:.2f}".replace('.', ',')
-
-    # LÓGICA DO BOT WHATSAPP
-    if valor_fatura > dados_app["limite_gasto"] and not dados_app["alerta_enviado"]:
-        if enviar_whatsapp(fatura_str, dados_app["limite_gasto"]):
-            dados_app["alerta_enviado"] = True
-
     return jsonify({
         "potencia": potencia,
-        "fatura": fatura_str,
+        "fatura": f"{valor_fatura:.2f}".replace('.', ','),
         "picos": dados_app["picos"]
     })
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-  
+    
