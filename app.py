@@ -24,10 +24,10 @@ def manifest():
         "theme_color": "#00aaff",
         "icons": [
             {
-                "src": "https://img.icons8.com/fluency/512/lightning-bolt.png",
+                "src": "https://i.ibb.co/JXGT3Q9/1770034963540.png",
                 "sizes": "512x512",
                 "type": "image/png",
-                "purpose": "any"
+                "purpose": "any maskable"
             }
         ]
     })
