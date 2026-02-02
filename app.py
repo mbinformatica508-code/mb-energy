@@ -23,14 +23,14 @@ def manifest():
         "theme_color": "#00aaff",
         "icons": [
             {
-                # Ícone de alta qualidade para o celular
-                "src": "https://cdn-icons-png.flaticon.com/512/2731/2731636.png", 
+                "src": "https://i.postimg.cc/0jX9pXyL/mb-logo-circle.png", 
                 "sizes": "512x512",
                 "type": "image/png",
-                "purpose": "any maskable"
+                "purpose": "any"
             }
         ]
     })
+    
 
 @app.route('/sw.js')
 def sw():
