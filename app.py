@@ -5,13 +5,14 @@ from datetime import datetime
 
 app = Flask(__name__)
 
+# Banco de dados temporário
 dados_app = {
     "limite_gasto": 300.00,
     "picos": [],
     "assinaturas": {}
 }
 
-# --- CONFIGURAÇÃO DO PWA (ÍCONE E IDENTIDADE) ---
+# --- CONFIGURAÇÃO DO PWA (O QUE CRIA O ÍCONE NO CELULAR) ---
 @app.route('/manifest.json')
 def manifest():
     return jsonify({
@@ -23,14 +24,13 @@ def manifest():
         "theme_color": "#00aaff",
         "icons": [
             {
-                "src": "https://i.postimg.cc/0jX9pXyL/mb-logo-circle.png", 
+                "src": "https://cdn-icons-png.flaticon.com/512/2731/2731636.png",
                 "sizes": "512x512",
                 "type": "image/png",
-                "purpose": "any"
+                "purpose": "any maskable"
             }
         ]
     })
-    
 
 @app.route('/sw.js')
 def sw():
@@ -38,13 +38,13 @@ def sw():
     response.headers['Content-Type'] = 'application/javascript'
     return response
 
-# --- DASHBOARD COM A LOGO MB OFICIAL ---
+# --- INTERFACE VISUAL DO DASHBOARD ---
 HTML_GERAL = """
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#00aaff">
     <title>MB Energy Intelligence</title>
@@ -54,21 +54,21 @@ HTML_GERAL = """
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
         .container { max-width: 500px; margin: auto; }
         
-        /* LOGO MB OFICIAL: CÍRCULO + RAIO + LETRAS */
+        /* LOGO MB OFICIAL */
         .logo-box { text-align: center; padding: 15px 0; }
         .circle-logo {
-            width: 120px; height: 120px; border: 4px solid var(--accent);
+            width: 100px; height: 100px; border: 3px solid var(--accent);
             border-radius: 50%; margin: 0 auto; display: flex;
             align-items: center; justify-content: center; position: relative;
-            background: rgba(0, 170, 255, 0.05); box-shadow: 0 0 20px rgba(0, 170, 255, 0.2);
+            background: rgba(0, 170, 255, 0.05);
         }
-        .raio-svg { width: 50px; position: absolute; filter: drop-shadow(0 0 5px #00aaff); z-index: 1; }
-        .letras-mb { font-size: 38px; font-weight: 900; color: white; z-index: 2; margin-left: 10px; font-family: 'Arial Black', sans-serif; }
+        .raio-svg { width: 40px; position: absolute; z-index: 1; filter: drop-shadow(0 0 5px #00aaff); }
+        .letras-mb { font-size: 32px; font-weight: 900; color: white; z-index: 2; margin-left: 8px; font-family: sans-serif; }
         
         .card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 15px; border: 1px solid #30363d; }
         .watts { font-size: 45px; color: var(--accent); font-weight: bold; }
-        .label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: bold; }
-        .btn-config { background: var(--accent); color: white; padding: 18px; border-radius: 12px; text-decoration: none; display: block; text-align: center; font-weight: bold; }
+        .label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
+        .btn-config { background: var(--accent); color: white; padding: 16px; border-radius: 12px; text-decoration: none; display: block; text-align: center; font-weight: bold; margin-top: 10px; border: none; }
         .alerta-box { background: rgba(218, 54, 51, 0.2); border: 1px solid var(--danger); color: #ff7b72; padding: 12px; border-radius: 8px; display: none; margin-bottom: 15px; text-align: center; font-weight: bold; }
         .pico-item { font-size: 13px; border-bottom: 1px solid #30363d; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
         .tag-aparelho { background: rgba(0, 170, 255, 0.1); color: var(--accent); padding: 4px 8px; border-radius: 5px; font-weight: bold; border: 1px solid var(--accent); }
@@ -83,35 +83,35 @@ HTML_GERAL = """
                 </svg>
                 <span class="letras-mb">MB</span>
             </div>
-            <p style="margin-top: 10px; font-size: 13px; color: #8b949e; letter-spacing: 5px; font-weight: bold;">CIRCUITO DIGITAL</p>
+            <p style="margin-top: 10px; font-size: 12px; color: #8b949e; letter-spacing: 4px; font-weight: bold;">CIRCUITO DIGITAL</p>
         </div>
 
-        <div id="alerta_ui" class="alerta-box">⚠️ ALERTA: META ATINGIDA</div>
+        <div id="alerta_ui" class="alerta-box">⚠️ META DE GASTO ATINGIDA</div>
 
         <div class="card" style="text-align: center;">
-            <p class="label">Potência Real</p>
+            <p class="label">Potência Atual</p>
             <div class="watts" id="potencia">0 W</div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="card">
-                <p class="label">Fatura Estimada</p>
-                <div style="font-size: 24px; font-weight: bold; color: var(--success);" id="fatura">R$ 0,00</div>
+                <p class="label">Fatura Est.</p>
+                <div style="font-size: 22px; font-weight: bold; color: var(--success);" id="fatura">R$ 0,00</div>
             </div>
             <div class="card">
                 <p class="label">Sua Meta</p>
-                <div style="font-size: 24px; font-weight: bold; color: #c9d1d9;">R$ {{ "%.2f"|format(limite_atual) }}</div>
+                <div style="font-size: 22px; font-weight: bold; color: #c9d1d9;">R$ {{ "%.2f"|format(limite_atual) }}</div>
             </div>
         </div>
 
         <div class="card"><canvas id="graficoEnergia"></canvas></div>
 
         <div class="card">
-            <p class="label">Identificação de Aparelhos</p>
+            <p class="label">Aparelhos Identificados</p>
             <div id="lista_picos"></div>
         </div>
 
-        <a href="/configurar" class="btn-config">⚙️ CONFIGURAÇÕES</a>
+        <a href="/configurar" class="btn-config">⚙️ CONFIGURAR LIMITES</a>
     </div>
 
     <script>
@@ -126,7 +126,7 @@ HTML_GERAL = """
         });
 
         function identificar(valor) {
-            let nome = prompt("Nomear carga de " + valor + "W:");
+            let nome = prompt("Que aparelho consome " + valor + "W?");
             if (nome) {
                 fetch('/api/nomear', {
                     method: 'POST',
@@ -152,7 +152,7 @@ HTML_GERAL = """
 
                     let html = '';
                     data.picos.forEach(p => {
-                        let t = p.nome ? `<span class="tag-aparelho">${p.nome}</span>` : `<button onclick="identificar(${p.valor})" style="background:transparent; border:1px solid #00aaff; color:#00aaff; border-radius:5px; font-size:10px; cursor:pointer;">IDENTIFICAR</button>`;
+                        let t = p.nome ? `<span class="tag-aparelho">${p.nome}</span>` : `<button onclick="identificar(${p.valor})" style="background:transparent; border:1px solid #00aaff; color:#00aaff; border-radius:5px; font-size:10px; cursor:pointer; padding: 4px 8px;">NOMEAR</button>`;
                         html += `<div class="pico-item"><span>${p.hora} • <strong>${p.valor}W</strong></span>${t}</div>`;
                     });
                     document.getElementById('lista_picos').innerHTML = html;
@@ -175,7 +175,7 @@ def configurar():
         return redirect(url_for('index'))
     return render_template_string("""
         <body style="background:#0d1117;color:white;font-family:sans-serif;text-align:center;padding:50px;">
-            <h2 style="color:#00aaff">Meta Mensal</h2>
+            <h2 style="color:#00aaff">Definir Meta</h2>
             <form method="POST">
                 <input type="number" step="0.01" name="limite" style="padding:15px;border-radius:12px;margin-bottom:20px;width:80%;max-width:300px;background:#161b22;color:white;border:1px solid #30363d;"><br>
                 <button type="submit" style="background:#238636;color:white;padding:15px 30px;border:none;border-radius:12px;font-weight:bold;">SALVAR</button>
@@ -192,7 +192,7 @@ def nomear():
 
 @app.route('/api/dados')
 def dados():
-    pot = random.randint(150, 4000)
+    pot = random.randint(150, 3500)
     nome = None
     if pot > 1500:
         for v, n in dados_app["assinaturas"].items():
@@ -207,4 +207,4 @@ def dados():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-            
+    
