@@ -23,8 +23,8 @@ def manifest():
         "theme_color": "#00aaff",
         "icons": [
             {
-                # Este link aponta para um ícone de raio azul profissional para a tela inicial
-                "src": "https://img.icons8.com/external-flat-icons-inmotus-design/512/external-Energy-energy-flat-icons-inmotus-design-12.png",
+                # Ícone de alta qualidade para o celular
+                "src": "https://cdn-icons-png.flaticon.com/512/2731/2731636.png", 
                 "sizes": "512x512",
                 "type": "image/png",
                 "purpose": "any maskable"
@@ -38,7 +38,7 @@ def sw():
     response.headers['Content-Type'] = 'application/javascript'
     return response
 
-# --- DASHBOARD COM A LOGO MB ---
+# --- DASHBOARD COM A LOGO MB OFICIAL ---
 HTML_GERAL = """
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -46,8 +46,7 @@ HTML_GERAL = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="/manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#00aaff">
     <title>MB Energy Intelligence</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -55,59 +54,64 @@ HTML_GERAL = """
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
         .container { max-width: 500px; margin: auto; }
         
-        /* LOGO MB COM RAIO */
-        .header-logo { text-align: center; padding: 20px 0; }
-        .logo-svg { width: 130px; filter: drop-shadow(0 0 8px rgba(0, 170, 255, 0.4)); }
+        /* LOGO MB OFICIAL: CÍRCULO + RAIO + LETRAS */
+        .logo-box { text-align: center; padding: 15px 0; }
+        .circle-logo {
+            width: 120px; height: 120px; border: 4px solid var(--accent);
+            border-radius: 50%; margin: 0 auto; display: flex;
+            align-items: center; justify-content: center; position: relative;
+            background: rgba(0, 170, 255, 0.05); box-shadow: 0 0 20px rgba(0, 170, 255, 0.2);
+        }
+        .raio-svg { width: 50px; position: absolute; filter: drop-shadow(0 0 5px #00aaff); z-index: 1; }
+        .letras-mb { font-size: 38px; font-weight: 900; color: white; z-index: 2; margin-left: 10px; font-family: 'Arial Black', sans-serif; }
         
-        .card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 15px; border: 1px solid #30363d; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        .label { font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-        .watts { font-size: 48px; color: var(--accent); font-weight: 800; margin: 5px 0; }
-        .valor-fatura { font-size: 30px; font-weight: bold; color: var(--success); }
-        .btn-config { background: var(--accent); color: white; padding: 18px; border-radius: 12px; text-decoration: none; display: block; text-align: center; font-weight: bold; margin-top: 10px; }
-        .alerta-box { background: rgba(218, 54, 51, 0.15); border: 1px solid var(--danger); color: #ff7b72; padding: 15px; border-radius: 10px; display: none; margin-bottom: 15px; text-align: center; font-weight: bold; }
-        .pico-item { font-size: 14px; border-bottom: 1px solid #30363d; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
-        .btn-iden { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .tag-aparelho { background: rgba(0, 170, 255, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 6px; font-weight: bold; border: 1px solid var(--accent); }
+        .card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 15px; border: 1px solid #30363d; }
+        .watts { font-size: 45px; color: var(--accent); font-weight: bold; }
+        .label { font-size: 11px; color: #8b949e; text-transform: uppercase; font-weight: bold; }
+        .btn-config { background: var(--accent); color: white; padding: 18px; border-radius: 12px; text-decoration: none; display: block; text-align: center; font-weight: bold; }
+        .alerta-box { background: rgba(218, 54, 51, 0.2); border: 1px solid var(--danger); color: #ff7b72; padding: 12px; border-radius: 8px; display: none; margin-bottom: 15px; text-align: center; font-weight: bold; }
+        .pico-item { font-size: 13px; border-bottom: 1px solid #30363d; padding: 12px 0; display: flex; justify-content: space-between; align-items: center; }
+        .tag-aparelho { background: rgba(0, 170, 255, 0.1); color: var(--accent); padding: 4px 8px; border-radius: 5px; font-weight: bold; border: 1px solid var(--accent); }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header-logo">
-            <svg class="logo-svg" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
-                <path d="M40 10 L25 45 L45 45 L30 75 L70 35 L50 35 L65 10 Z" fill="#00aaff" />
-                <text x="80" y="55" font-family="Arial Black" font-size="52" fill="white">MB</text>
-            </svg>
-            <p style="margin-top: -5px; font-size: 12px; color: #8b949e; letter-spacing: 4px;">CIRCUITO DIGITAL</p>
+        <div class="logo-box">
+            <div class="circle-logo">
+                <svg class="raio-svg" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 2 L6 18 L14 18 L10 30 L26 10 L16 10 L20 2 Z" fill="#00aaff" />
+                </svg>
+                <span class="letras-mb">MB</span>
+            </div>
+            <p style="margin-top: 10px; font-size: 13px; color: #8b949e; letter-spacing: 5px; font-weight: bold;">CIRCUITO DIGITAL</p>
         </div>
 
-        <div id="alerta_ui" class="alerta-box">⚠️ LIMITE DE GASTO ATINGIDO</div>
+        <div id="alerta_ui" class="alerta-box">⚠️ ALERTA: META ATINGIDA</div>
 
         <div class="card" style="text-align: center;">
-            <p class="label">Potência em Tempo Real</p>
+            <p class="label">Potência Real</p>
             <div class="watts" id="potencia">0 W</div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="card">
                 <p class="label">Fatura Estimada</p>
-                <div class="valor-fatura" id="fatura">R$ 0,00</div>
+                <div style="font-size: 24px; font-weight: bold; color: var(--success);" id="fatura">R$ 0,00</div>
             </div>
             <div class="card">
                 <p class="label">Sua Meta</p>
-                <div class="valor-fatura" style="color: #c9d1d9;">R$ {{ "%.2f"|format(limite_atual) }}</div>
+                <div style="font-size: 24px; font-weight: bold; color: #c9d1d9;">R$ {{ "%.2f"|format(limite_atual) }}</div>
             </div>
         </div>
 
-        <div class="card">
-            <canvas id="graficoEnergia"></canvas>
-        </div>
+        <div class="card"><canvas id="graficoEnergia"></canvas></div>
 
         <div class="card">
-            <p class="label">Identificação Inteligente (NILM)</p>
-            <div id="lista_picos" style="margin-top: 10px;"></div>
+            <p class="label">Identificação de Aparelhos</p>
+            <div id="lista_picos"></div>
         </div>
 
-        <a href="/configurar" class="btn-config">⚙️ AJUSTAR CONFIGURAÇÕES</a>
+        <a href="/configurar" class="btn-config">⚙️ CONFIGURAÇÕES</a>
     </div>
 
     <script>
@@ -122,7 +126,7 @@ HTML_GERAL = """
         });
 
         function identificar(valor) {
-            let nome = prompt("Qual aparelho consome " + valor + "W?");
+            let nome = prompt("Nomear carga de " + valor + "W:");
             if (nome) {
                 fetch('/api/nomear', {
                     method: 'POST',
@@ -138,9 +142,8 @@ HTML_GERAL = """
                 .then(data => {
                     document.getElementById('potencia').innerText = data.potencia + " W";
                     document.getElementById('fatura').innerText = "R$ " + data.fatura;
-                    
-                    const valorNum = parseFloat(data.fatura.replace(',','.'));
-                    document.getElementById('alerta_ui').style.display = valorNum > meta ? 'block' : 'none';
+                    const vNum = parseFloat(data.fatura.replace(',','.'));
+                    document.getElementById('alerta_ui').style.display = vNum > meta ? 'block' : 'none';
 
                     if (chart.data.labels.length > 15) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
                     chart.data.labels.push(new Date().toLocaleTimeString());
@@ -149,8 +152,8 @@ HTML_GERAL = """
 
                     let html = '';
                     data.picos.forEach(p => {
-                        let tag = p.nome ? `<span class="tag-aparelho">${p.nome}</span>` : `<button class="btn-iden" onclick="identificar(${p.valor})">IDENTIFICAR</button>`;
-                        html += `<div class="pico-item"><span>${p.hora} • <strong>${p.valor}W</strong></span>${tag}</div>`;
+                        let t = p.nome ? `<span class="tag-aparelho">${p.nome}</span>` : `<button onclick="identificar(${p.valor})" style="background:transparent; border:1px solid #00aaff; color:#00aaff; border-radius:5px; font-size:10px; cursor:pointer;">IDENTIFICAR</button>`;
+                        html += `<div class="pico-item"><span>${p.hora} • <strong>${p.valor}W</strong></span>${t}</div>`;
                     });
                     document.getElementById('lista_picos').innerHTML = html;
                 });
@@ -172,12 +175,12 @@ def configurar():
         return redirect(url_for('index'))
     return render_template_string("""
         <body style="background:#0d1117;color:white;font-family:sans-serif;text-align:center;padding:50px;">
-            <h2 style="color:#00aaff">Definir Meta Mensal</h2>
+            <h2 style="color:#00aaff">Meta Mensal</h2>
             <form method="POST">
                 <input type="number" step="0.01" name="limite" style="padding:15px;border-radius:12px;margin-bottom:20px;width:80%;max-width:300px;background:#161b22;color:white;border:1px solid #30363d;"><br>
-                <button type="submit" style="background:#238636;color:white;padding:15px 30px;border:none;border-radius:12px;font-weight:bold;width:80%;max-width:300px;">SALVAR META</button>
+                <button type="submit" style="background:#238636;color:white;padding:15px 30px;border:none;border-radius:12px;font-weight:bold;">SALVAR</button>
             </form>
-            <br><a href="/" style="color:#00aaff;text-decoration:none;">← Voltar ao Dashboard</a>
+            <br><a href="/" style="color:#00aaff;text-decoration:none;">← Voltar</a>
         </body>
     """)
 
@@ -189,19 +192,19 @@ def nomear():
 
 @app.route('/api/dados')
 def dados():
-    potencia = random.randint(150, 4500)
-    if potencia > 1500:
-        nome_detectado = None
-        for v_assinado, nome in dados_app["assinaturas"].items():
-            if abs(int(v_assinado) - potencia) < (int(v_assinado) * 0.15):
-                nome_detectado = nome
+    pot = random.randint(150, 4000)
+    nome = None
+    if pot > 1500:
+        for v, n in dados_app["assinaturas"].items():
+            if abs(int(v) - pot) < (int(v) * 0.15):
+                nome = n
                 break
-        dados_app["picos"].insert(0, {"hora": datetime.now().strftime("%H:%M"), "valor": potencia, "nome": nome_detectado})
+        dados_app["picos"].insert(0, {"hora": datetime.now().strftime("%H:%M"), "valor": pot, "nome": nome})
         dados_app["picos"] = dados_app["picos"][:5]
-
-    fatura = (potencia * 0.85)
-    return jsonify({"potencia": potencia, "fatura": f"{fatura:.2f}".replace('.', ','), "picos": dados_app["picos"]})
+    fat = (pot * 0.85)
+    return jsonify({"potencia": pot, "fatura": f"{fat:.2f}".replace('.', ','), "picos": dados_app["picos"]})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+            
